@@ -41,10 +41,7 @@ transform_test_largescale = transforms.Compose([
 def load_id_data(dataset: str, batch_size: int, **kwargs) -> torch.utils.data.DataLoader:
     # transform没写，之后看是否需要
     if dataset == "imagenet":
-        path = Path('data/imagenet/val')
-        if not path.is_dir():
-            raise FileNotFoundError(f'Directory for ID dataset "{dataset}" not found!')
-        valset = torchvision.datasets.ImageFolder(path)
+        valset = torchvision.datasets.ImageFolder(Path('data/imagenet/val'))
 
     elif dataset == "CIFAR10":
         valset = torchvision.datasets.CIFAR10(Path('./data'), train=False,
@@ -54,7 +51,7 @@ def load_id_data(dataset: str, batch_size: int, **kwargs) -> torch.utils.data.Da
         valset = torchvision.datasets.CIFAR100(Path('./data'), train=False,
                 download=True)
 
-    return torch.utils.data.DataLoader(dataset, batch_size=batch_size,
+    return torch.utils.data.DataLoader(valset, batch_size=batch_size,
             num_workers=2, **kwargs)
 
 def load_ood_data(dataset: str, batch_size: int, **kwargs) -> torch.utils.data.DataLoader:

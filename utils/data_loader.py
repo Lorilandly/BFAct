@@ -1,5 +1,5 @@
-import torch
 import torchvision
+from torch.utils.data import DataLoader
 from pathlib import Path
 from torchvision import transforms
 
@@ -38,7 +38,7 @@ transform_test_largescale = transforms.Compose([
                          std=[0.229, 0.224, 0.225]),
 ])
 
-def load_id_data(dataset: str, batch_size: int, **kwargs) -> torch.utils.data.DataLoader:
+def load_id_data(dataset: str, batch_size: int, **kwargs) -> DataLoader:
     # transform没写，之后看是否需要
     if dataset == "imagenet":
         valset = torchvision.datasets.ImageFolder(Path('data/imagenet/val'))
@@ -51,10 +51,10 @@ def load_id_data(dataset: str, batch_size: int, **kwargs) -> torch.utils.data.Da
         valset = torchvision.datasets.CIFAR100(Path('./data'), train=False,
                 download=True)
 
-    return torch.utils.data.DataLoader(valset, batch_size=batch_size,
-            num_workers=2, **kwargs)
+    return DataLoader(valset, batch_size=batch_size,
+            num_workers=1, **kwargs)
 
-def load_ood_data(dataset: str, batch_size: int, **kwargs) -> torch.utils.data.DataLoader:
+def load_ood_data(dataset: str, batch_size: int, **kwargs) -> DataLoader:
 
     if dataset == 'CIFAR-100':
         valset = torchvision.datasets.CIFAR100(Path('./data'), train=False,
@@ -81,6 +81,6 @@ def load_ood_data(dataset: str, batch_size: int, **kwargs) -> torch.utils.data.D
         valset = torchvision.datasets.ImageFolder(Path("./data") / dataset,
                 transform=transform_test)
 
-    return torch.utils.data.DataLoader(valset, batch_size=batch_size,
+    return DataLoader(valset, batch_size=batch_size,
             num_workers=2, **kwargs)
 

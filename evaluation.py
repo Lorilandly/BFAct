@@ -14,5 +14,8 @@ class Evaluation:
                 len(self.id_data.dataset.classes))
 
     def run(self):
-        print(self.id_data)
-        print(self.ood_data)
+        print("Processing in-distribution images")
+        N = len(self.id_data.dataset)
+        data_iter = iter(self.ood_data['dtd'])
+        img, lab = data_iter.next()
+        print(img, lab)

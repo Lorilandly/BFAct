@@ -375,9 +375,6 @@ class ResNetCifar(AbstractResNet):
 
         self.fc = nn.Linear(512 * block.expansion, num_classes)
 
-        if method.find("ood") > -1:
-            self.fc_ood = RouteFcMaxAct(512 * block.expansion, 1, topk=p)
-
         self.avgpool = nn.AvgPool2d(4, stride=1)
         self._initial_weight()
 

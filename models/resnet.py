@@ -289,10 +289,16 @@ class AbstractResNet(nn.Module):
 
 class ResNet(AbstractResNet):
 
-    def __init__(self, block, layers, num_classes=1000):
+    def __init__(self, block, layers, num_classes=1000, filter='bt', **kwargs):
         super(ResNet, self).__init__(block, layers, num_classes)
         self.fc = nn.Linear(512 * block.expansion, num_classes)
         self._initial_weight()
+        if filter == 'bt':
+            self.forward = self.forward_butterworth
+        elif filter == 'react':
+            self.forward = self.forward_react
+        else:
+            raise Exception('Unknown filter')
 
     def forward_masked(self, x, mask_weight=None, mask_bias=None):
         x = self.maxpool(self.relu(self.bn1(self.conv1(x))))
@@ -303,15 +309,22 @@ class ResNet(AbstractResNet):
         x = x.view(x.size(0), -1)
         return self.fc(x)
 
-    def forward_threshold(self, x, threshold=1e10):
+    def forward_react(self, x, threshold=1e10, **kwargs):
         x = self.maxpool(self.relu(self.bn1(self.conv1(x))))
         x= self.layer4(self.layer3(self.layer2(self.layer1(x))))
         x = self.avgpool(x)
-        # x = x.clip(max=threshold)
+        x = x.clip(max=threshold)
+        x = x.view(x.size(0), -1)
+        x = self.fc(x)
+        return x
+
+    def forward_butterworth(self, x, n=2, threshold=1e10, **kwargs):
+        x = self.maxpool(self.relu(self.bn1(self.conv1(x))))
+        x= self.layer4(self.layer3(self.layer2(self.layer1(x))))
+        x = self.avgpool(x)
         def softcap(x):
-            n = 6
             return (1 / ((1 + ((x / threshold) ** (2 * n))) ** 0.5)) * x
-        x.cpu().apply_(lambda x: softcap(x)).cuda()
+        x.apply_(lambda x: softcap(x))
         x = x.view(x.size(0), -1)
         x = self.fc(x)
         return x
@@ -350,14 +363,14 @@ class ResNet(AbstractResNet):
         return out
 
 
-def resnet18(pretrained=False, **kwargs):
+def resnet18(pretrained=True, **kwargs):
     model = ResNet(BasicBlock, [2, 2, 2, 2], **kwargs)
     if pretrained:
         model.load_state_dict(model_zoo.load_url(model_urls['resnet18']))
     return model
 
 
-def resnet50(pretrained=False, **kwargs):
+def resnet50(pretrained=True, **kwargs):
     model = ResNet(Bottleneck, [3, 4, 6, 3], **kwargs)
     if pretrained:
         model.load_state_dict(model_zoo.load_url(model_urls['resnet50']))

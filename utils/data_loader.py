@@ -41,15 +41,15 @@ transform_test_largescale = transforms.Compose([
 def load_id_data(dataset: str, batch_size: int, **kwargs) -> DataLoader:
     # transform没写，之后看是否需要
     if dataset == "imagenet":
-        valset = torchvision.datasets.ImageFolder(Path('data/imagenet/val'))
+        valset = torchvision.datasets.ImageFolder(Path('data/imagenet/val'), transform_test_largescale)
 
     elif dataset == "CIFAR10":
         valset = torchvision.datasets.CIFAR10(Path('./data'), train=False,
-                download=True)
+                transform=transform_test, download=True)
 
     elif dataset == "CIFAR100":
         valset = torchvision.datasets.CIFAR100(Path('./data'), train=False,
-                download=True)
+                transform=transform_test, download=True)
 
     return DataLoader(valset, batch_size=batch_size,
             num_workers=1, **kwargs)

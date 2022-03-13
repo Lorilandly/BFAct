@@ -288,11 +288,11 @@ class AbstractResNet(nn.Module):
 
 class ResNet(AbstractResNet):
 
-    def __init__(self, block, layers, num_classes=1000, filter='bt', **kwargs):
+    def __init__(self, block, layers, num_classes=1000, filter='butterworth', **kwargs):
         super(ResNet, self).__init__(block, layers, num_classes)
         self.fc = nn.Linear(512 * block.expansion, num_classes)
         self._initial_weight()
-        if filter == 'bt':
+        if filter == 'butterworth':
             self.forward = self.forward_butterworth
         elif filter == 'react':
             self.forward = self.forward_react
@@ -379,16 +379,21 @@ def resnet50(pretrained=True, **kwargs):
 
 
 class ResNetCifar(AbstractResNet):
-    def __init__(self, block, layers, num_classes=10, method='', p=None, info=None):
+    def __init__(self, block, layers, num_classes=10, p=None, info=None):
         super(ResNetCifar, self).__init__(block, layers, num_classes)
         self.in_planes = 64
         self.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False)
-        self.method = method
 
         self.fc = nn.Linear(512 * block.expansion, num_classes)
 
         self.avgpool = nn.AvgPool2d(4, stride=1)
         self._initial_weight()
+        if filter == 'butterworth':
+            self.forward = self.forward_butterworth
+        elif filter == 'react':
+            self.forward = self.forward_react
+        else:
+            raise Exception('Unknown filter')
 
     def features(self, x):
         out = F.relu(self.bn1(self.conv1(x)))
@@ -414,7 +419,17 @@ class ResNetCifar(AbstractResNet):
         x = x.view(x.size(0), -1)
         return self.fc(x)
 
-    def forward_threshold(self, x, threshold=1e10):
+    def forward_butterworth(self, x, n=2, threshold=1e10, **kwargs):
+        x = F.relu(self.bn1(self.conv1(x)))
+        x= self.layer4(self.layer3(self.layer2(self.layer1(x))))
+        x = self.avgpool(x)
+        def softcap(x):
+            return (1 / ((1 + ((x / threshold) ** (2 * n))) ** 0.5)) * x
+        x.apply_(lambda x: softcap(x))
+        x = x.view(x.size(0), -1)
+        return self.fc(x)
+        
+    def forward_react(self, x, threshold=1e10, **kwargs):
         x = F.relu(self.bn1(self.conv1(x)))
         x= self.layer4(self.layer3(self.layer2(self.layer1(x))))
         x = self.avgpool(x)

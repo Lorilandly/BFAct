@@ -53,7 +53,7 @@ class Evaluation:
         
         print("Processing out-of-distribution images")
         for ood_name, ood_data in self.ood_datas.items():
-            img_total = len(ood_data)
+            img_total = len(ood_data.dataset)
             img_count = 0
             timer = time.perf_counter()
             print(f"Dataset: {ood_name}")

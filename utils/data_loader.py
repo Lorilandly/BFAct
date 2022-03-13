@@ -51,7 +51,7 @@ def load_id_data(dataset: str, batch_size: int, **kwargs) -> DataLoader:
                 transform=transform_test, download=True)
 
     return DataLoader(valset, batch_size=batch_size,
-            num_workers=1, **kwargs)
+            num_workers=4, **kwargs)
 
 def load_ood_data(dataset: str, batch_size: int, **kwargs) -> DataLoader:
     if dataset == 'CIFAR-100':
@@ -76,9 +76,8 @@ def load_ood_data(dataset: str, batch_size: int, **kwargs) -> DataLoader:
         valset = torchvision.datasets.ImageFolder(Path('./data/imagenet/val'),
                 transform_test_largescale)
     else:
-        valset = torchvision.datasets.ImageFolder(Path("./data") / dataset,
-                transform=transform_test)
+        valset = torchvision.datasets.ImageFolder(Path("./data") / dataset, transform=transform_test_largescale)
 
     return DataLoader(valset, batch_size=batch_size,
-            num_workers=2, **kwargs)
+            num_workers=4, **kwargs)
 

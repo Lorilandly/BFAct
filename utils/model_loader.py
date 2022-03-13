@@ -23,6 +23,7 @@ def load_model(model, dataset, filter, class_count):
             raise Exception("Model not supported")
 
     model = model(num_classes=class_count, filter=filter)
+    model.eval()
     print(f'Number of model parameters: {sum([p.data.nelement() for p in model.parameters()])}')
 
     return model

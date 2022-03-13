@@ -50,6 +50,9 @@ def load_id_data(dataset: str, batch_size: int, **kwargs) -> DataLoader:
         valset = torchvision.datasets.CIFAR100(Path('./data'), train=False,
                 transform=transform_test, download=True)
 
+    else:
+        raise Exception('Unknown dataset')
+
     return DataLoader(valset, batch_size=batch_size,
             num_workers=4, **kwargs)
 

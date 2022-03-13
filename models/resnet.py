@@ -379,7 +379,7 @@ def resnet50(pretrained=True, **kwargs):
 
 
 class ResNetCifar(AbstractResNet):
-    def __init__(self, block, layers, num_classes=10, p=None, info=None):
+    def __init__(self, block, layers, num_classes=10, filter='butterworth', **kwargs):
         super(ResNetCifar, self).__init__(block, layers, num_classes)
         self.in_planes = 64
         self.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False)

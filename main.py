@@ -27,6 +27,6 @@ if __name__ == '__main__':
 
     cls = Evaluation(args)
     cls.run()
-    compute_traditional_ood(args.base_dir, args.id, args.ood, args.method)
-    compute_in(args.base_dir, args.id, args.method)
+    compute_traditional_ood(args.base_dir, args.id, args.ood, args.model, args.method)
+    compute_in(args.base_dir, args.id, args.model, args.method)
     print("Success!")

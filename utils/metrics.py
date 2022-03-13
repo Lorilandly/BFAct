@@ -1,6 +1,7 @@
 from __future__ import print_function
 import argparse
 from pathlib import Path
+import os
 
 import numpy as np
 
@@ -151,8 +152,12 @@ def compute_average_results(all_results):
 
     return avg_results
 
-def compute_traditional_ood(base_dir, id_name, ood_names, method, **kwargs):
-    known = np.loadtxt(Path(base_dir) / f'{id_name}-scores.txt', delimiter='\n')
+def compute_traditional_ood(base_dir, id_name, ood_names, model, method, **kwargs):
+    with open(Path(base_dir) / f'{id_name}-{model}-{method}-scores.npy', 'rb') as f:
+        fsz = os.fstat(f.fileno()).st_size
+        known = np.load(f)
+        while f.tell() < fsz:
+            known = np.append(known, np.load(f))
 
     known_sorted = np.sort(known)
     num_k = known.shape[0]
@@ -167,7 +172,11 @@ def compute_traditional_ood(base_dir, id_name, ood_names, method, **kwargs):
     total = 0.0
 
     for ood_name in ood_names:
-        novel = np.loadtxt(Path(base_dir) / f'{ood_name}-scores.txt', delimiter='\n')
+        with open(Path(base_dir) / f'{ood_name}-{model}-{method}-scores.npy', 'rb') as f:
+            fsz = os.fstat(f.fileno()).st_size
+            novel = np.load(f)
+            while f.tell() < fsz:
+                novel = np.append(novel, np.load(f))
 
         total += novel.shape[0]
 
@@ -195,9 +204,12 @@ def compute_stat(base_dir, in_dataset, out_datasets, method, name):
     print(f"OOD mean: {sum(all_mean) / len(out_datasets)} std: {sum(all_std) / len(out_datasets)}")
     return
 
-def compute_in(base_dir, id_name, method):
-
-    known_nat = np.loadtxt(Path(base_dir) / f'{id_name}-scores.txt', delimiter='\n')
+def compute_in(base_dir, id_name, model, method):
+    with open(Path(base_dir) / f'{id_name}-{model}-{method}-scores.npy', 'rb') as f:
+        fsz = os.fstat(f.fileno()).st_size
+        known_nat = np.load(f)
+        while f.tell() < fsz:
+            known_nat = np.append(known_nat, np.load(f))
     known_nat_sorted = np.sort(known_nat)
     num_k = known_nat.shape[0]
 
@@ -206,7 +218,11 @@ def compute_in(base_dir, id_name, method):
     else:
         threshold = known_nat_sorted[round(0.05 * num_k)]
 
-    known_nat_label = np.loadtxt(Path(base_dir) / f'{id_name}-labels.txt')
+    with open(Path(base_dir) / f'{id_name}-{model}-{method}-labels.npy', 'rb') as f:
+        fsz = os.fstat(f.fileno()).st_size
+        known_nat_label = np.load(f)
+        while f.tell() < fsz:
+            known_nat_label = np.vstack((known_nat_label, np.load(f)))
 
     nat_in_cond = (known_nat>threshold).astype(np.float32)
     nat_correct = (known_nat_label[:,0] == known_nat_label[:,1]).astype(np.float32)
@@ -227,9 +243,9 @@ def compute_in(base_dir, id_name, method):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Pytorch Detecting Out-of-distribution examples in neural networks')
 
-    parser.add_argument('--in-dataset', default="CIFAR-10", type=str, help='in-distribution dataset')
-    parser.add_argument('--name', default="densenet", type=str,
-                        help='neural network name and training set')
+    parser.add_argument("--id", default="imagenet", type=str, help="['CIFAR100', 'imagenet']")
+    parser.add_argument("--ood", default=['inat', 'sun50', 'places50', 'dtd'], type=str, nargs='+', help="['SVHN', 'LSUN', 'LSUN_resize', 'iSUN', 'dtd', 'places365']  ['inat', 'sun50', 'places50', 'dtd', ]")
+    parser.add_argument("--model", default="resnet50", type=str, help="['resnet50', 'resnet18', 'mobilenet']")
     parser.add_argument('--method', default='energy', type=str, help='odin mahalanobis')
     parser.add_argument('--base-dir', default='output/ood_scores', type=str, help='result directory')
     parser.add_argument('--epsilon', default=8, type=int, help='epsilon')
@@ -240,6 +256,5 @@ if __name__ == '__main__':
 
     np.random.seed(1)
 
-    out_datasets = ['SVHN', 'LSUN', 'LSUN_resize', 'iSUN', 'dtd', 'places365']
-    compute_traditional_ood(args.base_dir, args.in_dataset, out_datasets, args.method, args.name)
-    compute_in(args.base_dir, args.in_dataset, args.method, args.name)
+    compute_traditional_ood(args.base_dir, args.id, args.ood, args.model, args.method)
+    compute_in(args.base_dir, args.id, args.model, args.method)

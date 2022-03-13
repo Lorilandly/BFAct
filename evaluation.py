@@ -11,6 +11,7 @@ class Evaluation:
         # arguments
         self.kwargs = {'n': args.butterworth, 'threshold': args.threshold}
         self.base_dir = args.base_dir
+        self.suffix = f'{args.model}-{args.method}'
 
         # datasets
         self.id_name = args.id
@@ -31,7 +32,7 @@ class Evaluation:
         img_count = 0
         timer = time.perf_counter()
         print(f"Dataset: {self.id_name}")
-        with open(self.base_dir / f'{self.id_name}-scores.txt', 'w') as f_score, open(self.base_dir / f'{self.id_name}-labels.txt', 'w') as f_label:
+        with open(self.base_dir / f'{self.id_name}-{self.suffix}-scores.npy', 'wb') as f_score, open(self.base_dir / f'{self.id_name}-{self.suffix}-labels.npy', 'wb') as f_label:
             for images, labels in self.id_data:
                 img_count += images.shape[0]
                 inputs = images.float()
@@ -41,23 +42,21 @@ class Evaluation:
                     outputs = outputs.detach().cpu().numpy()
                     preds = np.argmax(outputs, axis=1)
                     confs = np.max(outputs, axis=1)
-                    for k in range(preds.shape[0]):
-                        f_label.write("{} {} {}\n".format(labels[k], preds[k], confs[k]))
+                    np.save(f_label, np.array([labels.numpy(), preds, confs], dtype=float).T)
 
                 scores = self.score(logits)
-                for score in scores:
-                    f_score.write("{}\n".format(score))
+                np.save(f_score, scores)
 
                 print(f"{img_count:4}/{img_total:4} images processed, {time.perf_counter()-timer:.1f} seconds used.")
                 timer = time.perf_counter()
-        
+
         print("Processing out-of-distribution images")
         for ood_name, ood_data in self.ood_datas.items():
             img_total = len(ood_data.dataset)
             img_count = 0
             timer = time.perf_counter()
             print(f"Dataset: {ood_name}")
-            with open(self.base_dir / f'{ood_name}-scores.txt', 'w') as f_score:
+            with open(self.base_dir / f'{ood_name}-{self.suffix}-scores.npy', 'wb') as f_score:
                 for images, labels in ood_data:
                     img_count += images.shape[0]
                     inputs = images.float()
@@ -65,8 +64,7 @@ class Evaluation:
                         logits = self.model.forward(inputs, **self.kwargs)
 
                     scores = self.score(logits)
-                    for score in scores:
-                        f_score.write("{}\n".format(score))
+                    np.save(f_score, scores)
 
                     print(f"{img_count:4}/{img_total:4} images processed, {time.perf_counter()-timer:.1f} seconds used.")
                     timer = time.perf_counter()

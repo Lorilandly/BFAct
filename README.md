@@ -14,7 +14,7 @@ The datasets for this program is placed in the folder `./data`. Some of the data
 
 The ImageNet dataset can be downloaded from here [Imagenet-1k ](http://www.image-net.org/challenges/LSVRC/2012/index)
 
-The CIFAR datasets are downloaded automatically
+The [CIFAR](https://www.cs.toronto.edu/~kriz/cifar.html) datasets are downloaded automatically
 
 #### OOD datasets
 

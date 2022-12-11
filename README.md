@@ -1,4 +1,4 @@
-# OOD_ECCV
+# BFAct: Out-of-distribution Detection with Butterworth Rectified Activations
 
 This is the source code for the paper [link to paper] by Haoan Li and Haojia Kong
 

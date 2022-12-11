@@ -2,7 +2,7 @@
 
 This is the source code for the paper [link to paper] by Haoan Li and Haojia Kong
 
-In this work, we propose a method for reducing model overconfidence on OOD data.
+In this work, we propose BFAct for reducing model overconfidence on OOD data.
 
 ## Usage
 
